@@ -5,7 +5,7 @@ A simple PHP library for getting Bpost tracking information.
 Add to your ``composer.json`` file and run ``composer install``:
 
     "require": {
-        "savjee/xd-slack-connect": "dev-master"
+        "savjee/xd-bpost-track": "dev-master"
     },    
 
 
