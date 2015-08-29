@@ -19,7 +19,8 @@
 
   "autoload": {
     "psr-0": {
-      "Savjee\\BpostPackage": "src/"
+      "Savjee\\BpostPackage": "src/",
+      "Savjee\\StatusUpdate": "src/"
     }
   },
 
