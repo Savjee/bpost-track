@@ -19,7 +19,7 @@
 
   "autoload": {
     "psr-0": {
-      "Savjee": "src/"
+      "Savjee\\BpostPackage": "src/"
     }
   },
 
