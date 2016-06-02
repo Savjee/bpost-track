@@ -5,9 +5,9 @@ A simple PHP library for getting Bpost tracking information.
 Add to your ``composer.json`` file and run ``composer install``:
 
 ```json
-    "require": {
-        "savjee/bpost-track": "dev-master"
-    },    
+"require": {
+    "savjee/bpost-track": "dev-master"
+},    
 ```
 
 ## How to use
