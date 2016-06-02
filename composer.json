@@ -13,8 +13,7 @@
 
   "require": {
     "php": ">=5.4.0",
-    "php-curl-class/php-curl-class": "^4.6"/*,
-    "sunra/php-simple-html-dom-parser": "v1.5.0"*/
+    "php-curl-class/php-curl-class": "^4.6"
   },
 
   "autoload": {
