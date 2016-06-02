@@ -1,6 +1,6 @@
 <?php
 
-namespace Savjee;
+namespace Savjee\BpostTrack;
 
 class StatusUpdate
 {
