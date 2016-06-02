@@ -1,4 +1,4 @@
-# XDBpostTrack
+# BpostTrack
 A simple PHP library for getting Bpost tracking information.
 
 ## Installation
