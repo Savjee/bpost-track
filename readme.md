@@ -4,25 +4,28 @@ A simple PHP library for getting Bpost tracking information.
 ## Installation
 Add to your ``composer.json`` file and run ``composer install``:
 
+```json
     "require": {
         "savjee/bpost-track": "dev-master"
     },    
-
+```
 
 ## How to use
 Start by creating an instance with your tracking number:
 
-    require 'vendor/autoload.php';
-    use Savjee\BpostTrack\BpostPackage;
+```php
+require 'vendor/autoload.php';
+use Savjee\BpostTrack\BpostPackage;
 
-    $myPackage = new BpostPackage('YOUR PACKAGE NUMBER HERE');
-
+$myPackage = new BpostPackage('YOUR PACKAGE NUMBER HERE');
+```
 
 ## Fetching status updates
 Now you can fetch the status updates of your package with the ``getStatusUpdates()`` method:
 
-    $myPackage->getStatusUpdates();
-
+```php
+$myPackage->getStatusUpdates();
+```
    
 This will return an array with ``StatusUpdate`` objects. The array is sorted, newest entries come first.
 
@@ -58,8 +61,10 @@ This will return an array with ``StatusUpdate`` objects. The array is sorted, ne
 
 Use either ``getReceiver()`` or ``getSender()``:
 
-     $myPackage->getReceiver();
-     $myPackage->getSender();
+```php
+$myPackage->getReceiver();
+$myPackage->getSender();
+```
      
 And this will return a ``SenderReceiver`` object:
 
