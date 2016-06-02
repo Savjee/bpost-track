@@ -1,8 +1,9 @@
 <?php
 
-namespace Savjee;
+namespace Savjee\BpostTrack;
 
 use Curl\Curl;
+use Exception;
 use Sunra\PhpSimple\HtmlDomParser;
 
 /**
@@ -13,87 +14,89 @@ use Sunra\PhpSimple\HtmlDomParser;
  */
 class BpostPackage
 {
-    private $itemNumber;
-    private $statusUpdates = array();
-    private $language = 'NL';
+    const BPOST_API_ENDPOINT = 'http://track.bpost.be/btr/api/';
+    const LANGUAGE = 'nl'; // nl, en, fr
 
-    /**
-     * BpostPackage constructor.
-     * @param $itemNumber
-     */
+    // Pakcage information
+    private $statusUpdates = array();
+    private $itemNumber;
+    private $weight;
+    private $customerReference;
+    private $requestedDeliveryMethod;
+
+    /** @var  SenderReceiver $sender */
+    private $sender;
+
+    /** @var  SenderReceiver $receiver */
+    private $receiver;
+
+    private $translationsCache = null;
+
+
+
     public function __construct($itemNumber)
     {
         $this->setItemNumber($itemNumber);
+        $this->fetchTranslations();
         $this->getTrackingInformation();
     }
 
-    private function getTrackingInformation(){
-
-        //
-        // First request: getting the queryToken and sessionIdCookie
-        //
+    private function fetchTranslations(){
         $curl = new Curl();
-        $curl->setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36');
-        $curl->get('http://track.bpost.be/etr/light/showSearchPage.do?oss_language='. $this->getLanguage());
+        $curl->get(self::BPOST_API_ENDPOINT . 'translations?lang=' . self::LANGUAGE);
 
         if($curl->error){
-            throw new Exception('CURL error: ' . $curl->errorCode . ': ' . $curl->errorMessage);
+            throw new Exception('CURL error while fetching translations: ' . $curl->errorCode . ': ' . $curl->errorMessage);
         }
 
-        $postData = $this->getPostData($curl);
-        $sessionIdCookie = ($curl->getCookie('JSESSIONID'));
-
-        //
-        // Second request: get the tracking information
-        //
-        $curl->setReferer('http://track.bpost.be/etr/light/showSearchPage.do?oss_language=NL');
-        $curl->post('http://track.bpost.be/etr/light/performSearch.do;jsessionid=' . $sessionIdCookie, $postData);
-
-        if($curl->error){
-            throw new Exception('CURL error: ' . $curl->errorCode . ': ' . $curl->errorMessage);
-        }
-
-        //
-        // Process the tracking information and create StatusUpdate instances
-        //
-        $this->generateStatusUpdateInstances($curl->response);
+        $this->translationsCache = $curl->response;
     }
 
-    private function generateStatusUpdateInstances($data){
-        // Parse the response
-        $dom = HtmlDomParser::str_get_html($data);
+    private function translateKey($key){
+        if($this->translationsCache == null){
+            $this->fetchTranslations();
+        }
 
-        foreach($dom->find('table#reportedLine tr[class="odd"], table#reportedLine tr[class="even"]') as $historyLine){
-            $date = $historyLine->find('td', 0)->plaintext;
-            $time = $historyLine->find('td', 1)->plaintext;
-            $status = $historyLine->find('td', 2)->plaintext;
-            $location = $historyLine->find('td', 3)->plaintext;
+        return $this->translationsCache->event->$key->description;
+    }
+    
+    private function getTrackingInformation(){
+        $curl = new Curl();
+        $curl->get(self::BPOST_API_ENDPOINT . 'items?itemIdentifier=' . $this->getItemNumber());
 
-            $statusUpdate = new StatusUpdate($date, $time, $status, $location);
+        if($curl->error){
+            throw new Exception('CURL error while fetching tracking information: ' . $curl->errorCode . ': ' . $curl->errorMessage);
+        }
+
+        // Curl library already decoded the JSON (cool!)
+        $response = $curl->response[0];
+
+        // Decode sender
+        $rawSender = $response->sender;
+        $this->sender = new SenderReceiver($rawSender->countryCode, $rawSender->municipality, $rawSender->postcode);
+
+        // Decode receiver
+        $rawReceiver = $response->receiver;
+        $this->receiver = new SenderReceiver($rawReceiver->countryCode, $rawReceiver->municipality, $rawReceiver->postcode, $rawReceiver->name);
+
+
+        // Some other stuff
+        $this->weight = (int) $response->weightInGrams;
+        $this->customerReference = $response->customerReference;
+        $this->requestedDeliveryMethod = $response->requestedDeliveryMethod;
+
+        // Decode events
+        $rawEvents = $response->events;
+
+        foreach($rawEvents as $rawEvent){
+            $lang = self::LANGUAGE;
+            $eventDescription = $this->translateKey($rawEvent->key);
+
+            $statusUpdate = new StatusUpdate($rawEvent->date, $rawEvent->time, $eventDescription, $rawEvent->location->$lang);
+
             array_push($this->statusUpdates, $statusUpdate);
         }
     }
-
-    private function getPostData(Curl $curl){
-        // Feed response into Simple HTML DOM
-        $dom = HtmlDomParser::str_get_html($curl->response);
-
-        // Array for post data
-        $postData = array();
-        $postData['searchByItemCode'] = 'true';
-        $postData['searchByCustomerReference'] = 'false';
-        $postData['includeOldItems'] = 'false';
-        $postData['oss_language'] = $this->getLanguage();
-        $postData['itemCodes'] = $this->getItemNumber();
-
-        // Search for the queryToken
-        $queryToken = $dom->find('input[name="queryToken"]', 0);
-        $postData['queryToken'] = $queryToken->value;
-
-        return $postData;
-    }
-
-
 
     /**
      * @return mixed
@@ -101,14 +104,6 @@ class BpostPackage
     public function getItemNumber()
     {
         return $this->itemNumber;
-    }
-
-    /**
-     * @param mixed $itemNumber
-     */
-    public function setItemNumber($itemNumber)
-    {
-        $this->itemNumber = $itemNumber;
     }
 
     /**
@@ -120,26 +115,47 @@ class BpostPackage
     }
 
     /**
-     * @param array $statusUpdates
+     * @return mixed
      */
-    public function setStatusUpdates($statusUpdates)
+    public function getWeight()
     {
-        $this->statusUpdates = $statusUpdates;
+        return $this->weight;
     }
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getLanguage()
+    public function getCustomerReference()
     {
-        return $this->language;
+        return $this->customerReference;
     }
 
     /**
-     * @param string $language
+     * @return mixed
      */
-    public function setLanguage($language)
+    public function getRequestedDeliveryMethod()
     {
-        $this->language = $language;
+        return $this->requestedDeliveryMethod;
+    }
+
+    /**
+     * @return SenderReceiver
+     */
+    public function getSender()
+    {
+        return $this->sender;
+    }
+
+    /**
+     * @return SenderReceiver
+     */
+    public function getReceiver()
+    {
+        return $this->receiver;
+    }
+
+    private function setItemNumber($itemNumber)
+    {
+        $this->itemNumber = $itemNumber;
     }
 }
