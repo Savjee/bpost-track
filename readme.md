@@ -1,7 +1,9 @@
 # BpostTrack
 [![Packagist](https://img.shields.io/packagist/dt/savjee/bpost-track.svg?maxAge=2592000?style=flat-square)](https://packagist.org/packages/savjee/bpost-track)
 [![GitHub issues](https://img.shields.io/github/issues/savjee/bpost-track.svg?maxAge=2592000?style=flat-square)](https://github.com/Savjee/bpost-track/issues)
-[![Packagist](https://img.shields.io/packagist/l/savjee/bpost-track.svg?maxAge=2592000?style=flat-square)](https://github.com/Savjee/bpost-track/blob/master/LICENSE.txt)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Savjee/bpost-track/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Savjee/bpost-track/?branch=master)
+[![Build Status](https://scrutinizer-ci.com/g/Savjee/bpost-track/badges/build.png?b=master)](https://scrutinizer-ci.com/g/Savjee/bpost-track/build-status/master)
+[![License](https://img.shields.io/packagist/l/savjee/bpost-track.svg?maxAge=2592000?style=flat-square)](https://github.com/Savjee/bpost-track/blob/master/LICENSE.txt)
 
 A simple PHP library for getting Bpost tracking information.
 
