@@ -33,7 +33,6 @@ class BpostPackage
     private $translationsCache = null;
 
 
-
     public function __construct($itemNumber)
     {
         $this->setItemNumber($itemNumber);
@@ -41,30 +40,33 @@ class BpostPackage
         $this->getTrackingInformation();
     }
 
-    private function fetchTranslations(){
+    private function fetchTranslations()
+    {
         $curl = new Curl();
         $curl->get(self::BPOST_API_ENDPOINT . 'translations?lang=' . self::LANGUAGE);
 
-        if($curl->error){
+        if ($curl->error) {
             throw new Exception('CURL error while fetching translations: ' . $curl->errorCode . ': ' . $curl->errorMessage);
         }
 
         $this->translationsCache = $curl->response;
     }
 
-    private function translateKey($key){
-        if($this->translationsCache == null){
+    private function translateKey($key)
+    {
+        if ($this->translationsCache == null) {
             $this->fetchTranslations();
         }
 
         return $this->translationsCache->event->$key->description;
     }
-    
-    private function getTrackingInformation(){
+
+    private function getTrackingInformation()
+    {
         $curl = new Curl();
         $curl->get(self::BPOST_API_ENDPOINT . 'items?itemIdentifier=' . $this->getItemNumber());
 
-        if($curl->error){
+        if ($curl->error) {
             throw new Exception('CURL error while fetching tracking information: ' . $curl->errorCode . ': ' . $curl->errorMessage);
         }
 
@@ -81,14 +83,14 @@ class BpostPackage
 
 
         // Some other stuff
-        $this->weight = (int) $response->weightInGrams;
+        $this->weight = (int)$response->weightInGrams;
         $this->customerReference = $response->customerReference;
         $this->requestedDeliveryMethod = $response->requestedDeliveryMethod;
 
         // Decode events
         $rawEvents = $response->events;
 
-        foreach($rawEvents as $rawEvent){
+        foreach ($rawEvents as $rawEvent) {
             $lang = self::LANGUAGE;
             $eventDescription = $this->translateKey($rawEvent->key);
 

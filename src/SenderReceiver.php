@@ -11,7 +11,10 @@ namespace Savjee\BpostTrack;
 
 class SenderReceiver
 {
-    private $countryCode, $municipality, $name, $zipcode;
+    private $countryCode;
+    private $municipality;
+    private $name;
+    private $zipcode;
 
     public function __construct($countryCode, $municipality, $zipcode, $name = '')
     {
